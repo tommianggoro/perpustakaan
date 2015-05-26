@@ -29,7 +29,7 @@
             **/
         })
         
-        $("#kodeCabang").keypress(function(){
+        $("#kode").keypress(function(){
             var keycode = (event.keyCode ? event.keyCode : event.which);
             if(keycode == '13'){
                 var kode = $("#kodeCabang").val();
@@ -56,7 +56,7 @@
             }
         });
 
-        $("#kodeCabang").bind('keyup', function(){
+        $("#kode").bind('keyup', function(){
             var kode = $(this).val();
             $.ajax({
                 url:"<?php echo site_url('peminjaman/cariBarang');?>",
@@ -96,14 +96,14 @@
                     type:"POST",
                     data:{kode : kode, jenis : jenis, type : type, merk : merk},
                     cache:false,
+                    dataType: "JSON",
                     success:function(res){
                         if(res.code == 200){
                             loadData();
                             kosong();
-                        }else if(res.code == 502){
-                            alert("Stock Barang Habis");
                         }else{
-                            alert("Oops.. Something's Wrong.");
+                            alert(res.result);
+                            kosong();
                         }
                     }
                 })    
@@ -126,20 +126,43 @@
                 return false;
             }else{
                 $.ajax({
-                    url:"<?php echo site_url('peminjaman/sukses');?>",
-                    type:"POST",
-                    data: {nomer : nomer, pinjam : pinjam, idCabang : kode, jumlah : jumlah, idTemp : idTemp},
+                    url:"<?php echo site_url('peminjaman/checkStock');?>",
+                    type:"GET",
                     cache:false,
+                    async:false,
+                    dataType:"JSON",
                     success:function(resp){
-                        console.log(resp);
+                        if (resp.code != 200) {
+                            alert(resp.result);
+                        }else{
+                            // alert(resp.result);
+                            submitx(nomer, pinjam, kode, jumlah, idTemp);
+                        };
                         /**alert("Transaksi Peminjaman berhasil");
                         location.reload();
                         **/
                     }
-                })
+                });
+
+                
             }
             
         });
+
+        function submitx(nomer, pinjam, kode, jumlah, idTemp){
+            $.ajax({
+                url:"<?php echo site_url('peminjaman/sukses');?>",
+                type:"POST",
+                data: {nomer : nomer, pinjam : pinjam, idCabang : kode, jumlah : jumlah, idTemp : idTemp},
+                cache:false,
+                async:false,
+                dataType:"JSON",
+                success:function(resp){
+                    alert("Transaksi Peminjaman berhasil");
+                    location.reload();
+                }
+            });
+        }
         
         $(".hapus").live("click",function(){
             var kode = $(this).attr("kode");

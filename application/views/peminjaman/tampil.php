@@ -10,20 +10,22 @@
             <td></td>
         </tr>
     </thead>
-    <?php foreach($tmp as $tmp):?>
-    <tr>
-        <td><?php echo $tmp->kode_barang;?></td>
-        <td><?php echo $tmp->jenis;?></td>
-        <td><?php echo $tmp->nama;?></td>
-        <td><?php echo $tmp->merk;?></td>
-        <td><input type="number" name="sum" value="<?php echo $tmp->jumlah; ?>" tmp_detail_id="<?php echo $tmp->id; ?>" kode_barang="<?php echo $tmp->kode_barang; ?>"/></td>
-        <td><a href="#" class="hapus" kode="<?php echo $tmp->id;?>"><i class="glyphicon glyphicon-trash"></i></a></td>
-    </tr>
-    <?php endforeach;?>
-    <tr>
-        <td colspan="2">Total Barang</td>
-        <td colspan="2"><input type="text" id="jumlahTmp" readonly="readonly" value="" class="form-control"></td>
-    </tr>
+    <?php if($tmp): ?>
+        <?php foreach($tmp as $tmp):?>
+            <tr>
+                <td><?php echo $tmp->kode_barang;?></td>
+                <td><?php echo $tmp->jenis;?></td>
+                <td><?php echo $tmp->nama;?></td>
+                <td><?php echo $tmp->merk;?></td>
+                <td><input type="number" name="sum" value="<?php echo $tmp->jumlah; ?>" tmp_detail_id="<?php echo $tmp->id; ?>" kode_barang="<?php echo $tmp->kode_barang; ?>"/></td>
+                <td><a href="#" class="hapus" kode="<?php echo $tmp->id;?>"><i class="glyphicon glyphicon-trash"></i></a></td>
+            </tr>
+        <?php endforeach;?>
+        <tr>
+            <td colspan="2">Total Barang</td>
+            <td colspan="2"><input type="text" id="jumlahTmp" readonly="readonly" value="" class="form-control"></td>
+        </tr>
+    <?php endif; ?>
 </table>
 <script type="text/javascript">
     sums();

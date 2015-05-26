@@ -38,8 +38,9 @@ class Peminjaman extends CI_Controller {
         $userId = $this->session->userdata('id');
         $date = strtotime(date('Y-m-d'));
         $cek = $this->m_peminjaman->cekTmp($userId, $date);
+        $ret['code'] = 500;
+        $ret['result'] = 'Ooops.. Something wrong.';
         if($cek->num_rows() > 0){
-            var_dump($_POST);exit;
             $insTrans = array(
                 'id_transaksi' => $this->input->post('nomer'),
                 'id_cabang' => $this->input->post('idCabang'),
@@ -53,7 +54,7 @@ class Peminjaman extends CI_Controller {
             $idTemp = $cek->row()->id;
             $tmp = $this->m_peminjaman->tampilTmp($idTemp)->result();
             foreach ($tmp as $key => $value) {
-                if(is_integer($value->jumlah) && $value->jumlah > 0){
+                if($value->jumlah > 0){
                     $insTransD = array(
                         'id_transaksi' => $insTrans['id_transaksi'],
                         'kode_barang' => $value->kode_barang,
@@ -61,11 +62,48 @@ class Peminjaman extends CI_Controller {
                     );
                     $last = $this->db->insert('transaksi_detail', $insTransD);
                     if($last){
-                        $this->db->query("update barang SET jumlah_tmp = jumlah_tmp - ".$insTransD['jumlah']);
+                        $x = $this->_minBarang($insTransD['kode_barang'], $insTransD['jumlah']);
+                        if($x){
+                            $this->db->delete('tmp_detail',array('id' => $value->id));
+                            $ret['code'] = 200;
+                            $ret['result'] = 'Success';
+                        }
+                    }
+                }
+            }
+            if($ret['code'] == 200){
+                $this->db->delete('tmp',array('id' => $idTemp));
+            }
+        }
+
+        echo json_encode($ret);exit;
+    }
+
+    function checkStock(){
+        $userId = $this->session->userdata('id');
+        $date = strtotime(date('Y-m-d'));
+        $cek = $this->m_peminjaman->cekTmp($userId, $date);
+        $ret['code'] = 500;
+        $ret['result'] = 'Ooops.. Something wrong.';
+        if($cek->num_rows() > 0){
+            $idTemp = $cek->row()->id;
+            $tmp = $this->m_peminjaman->tampilTmp($idTemp)->result();
+            foreach ($tmp as $key => $value) {
+                if($value->jumlah > 0){
+                    $item = $this->_checkStokBarang($value->kode_barang);
+                    if(!$item){
+                        $ret['code'] = 502;
+                        $ret['result'] = 'Barang dengan kode '.$value->kode_barang.' sudah kehabisan stock.';
+                        break;
+                    }else{
+                        $ret['code'] = 200;
+                        $ret['result'] = 'Success';
                     }
                 }
             }
         }
+
+        echo json_encode($ret);exit;
     }
     
     function simpan() {
@@ -124,6 +162,7 @@ class Peminjaman extends CI_Controller {
         $cek = $this->m_peminjaman->cekTmp($userId, $date);
         
         $ret['code'] = 500;
+        $ret['result'] = 'Ooops.. Something wrong';
         $kodeBarang = $this->input->post('kode');
         $check = $this->_checkStokBarang($kodeBarang);
         if($check){
@@ -139,21 +178,30 @@ class Peminjaman extends CI_Controller {
                 $lastId = $row->id;                      
             }
 
-            $info = array(
-                'tmp_id' => $lastId,
-                'kode_barang' => $$kodeBarang, 
-                'merk' => $this->input->post('merk'), 
-                'type' => $this->input->post('type'), 
-                'jenis' => $this->input->post('jenis'),
-                'jumlah' => 1
-            ); 
-
-            $cek_ = $this->db->insert('tmp_detail', $info);
-            if($cek_){
-                $ret['code'] = 200;
+            $this->db->where('tmp_id', $lastId);
+            $this->db->where('kode_barang', $kodeBarang);
+            $q = $this->db->get('tmp_detail');
+            if($q->num_rows() < 1){
+                $info = array(
+                    'tmp_id' => $lastId,
+                    'kode_barang' => $kodeBarang, 
+                    'merk' => $this->input->post('merk'), 
+                    'type' => $this->input->post('type'), 
+                    'jenis' => $this->input->post('jenis'),
+                    'jumlah' => 1
+                ); 
+                $cek_ = $this->db->insert('tmp_detail', $info);
+                if($cek_){
+                    $ret['result'] = 'Sukses.';
+                    $ret['code'] = 200;
+                }
+            }else{
+                $ret['code'] = 501;
+                $ret['result'] = 'Barang sudah terdapat di list.';
             }
         }else{
             $ret['code'] = 502;
+            $ret['result'] = 'Ooops.. Stock Barang sudah habis.';
         }
 
         echo json_encode($ret);exit;
@@ -178,11 +226,11 @@ class Peminjaman extends CI_Controller {
     }
 
     private function _minBarang($kode, $jumlah = 1){
-        $this->db->query("Update barang set jumlah_tmp = jumlah_tmp - $jumlah");
+        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp - $jumlah");
     }
 
     private function _plusBarang($kode, $jumlah = 1){
-        $this->db->query("Update barang set jumlah_tmp = jumlah_tmp + $jumlah");
+        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp + $jumlah");
     }
 
     private function _checkStokBarang($kodeBarang){
