@@ -10,6 +10,7 @@ class Anggota extends CI_Controller{
         if(!$this->session->userdata('username')){
             redirect('web');
         }
+        $this->m_peminjaman->deleteTmp();
     }
     
     function index($offset=0,$order_column='nis',$order_type='asc'){

@@ -3,6 +3,7 @@ class Auth extends CI_Controller {
 	public function __construct() {
 		parent::__construct();
 		$this->load->model(array('m_petugas'));
+		$this->m_peminjaman->deleteTmp();
 	}
 	
 	function index() {

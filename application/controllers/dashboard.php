@@ -9,6 +9,7 @@ class Dashboard extends CI_Controller{
         if(!$this->session->userdata('username')){
             redirect('auth');
         }
+        $this->m_peminjaman->deleteTmp();
     }
     
     function index(){

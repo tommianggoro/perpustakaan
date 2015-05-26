@@ -14,7 +14,6 @@
     <thead>
         <tr>
             <td>No.</td>
-            <td>ID.</td>
             <td>Kode</td>
             <td>Nama</td>
             <td>Uker</td>

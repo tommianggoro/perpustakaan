@@ -9,6 +9,7 @@ class Peminjaman extends CI_Controller {
         if (!$this->session->userdata('username')) {
             redirect('/');
         }
+        $this->m_peminjaman->deleteTmp();
     }
     
     function index() {
@@ -62,7 +63,7 @@ class Peminjaman extends CI_Controller {
                     );
                     $last = $this->db->insert('transaksi_detail', $insTransD);
                     if($last){
-                        $x = $this->_minBarang($insTransD['kode_barang'], $insTransD['jumlah']);
+                        $x = $this->_minBarang($value->kode_barang, $value->jumlah);
                         if($x){
                             $this->db->delete('tmp_detail',array('id' => $value->id));
                             $ret['code'] = 200;
@@ -226,11 +227,11 @@ class Peminjaman extends CI_Controller {
     }
 
     private function _minBarang($kode, $jumlah = 1){
-        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp - $jumlah");
+        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp - $jumlah where kode_barang = '$kode'");
     }
 
     private function _plusBarang($kode, $jumlah = 1){
-        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp + $jumlah");
+        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp + $jumlah where kode_barang = '$kode'");
     }
 
     private function _checkStokBarang($kodeBarang){

@@ -7,6 +7,7 @@ class Web extends CI_Controller{
         if($this->session->userdata('username')){
             redirect('dashboard');
         }
+        $this->m_peminjaman->deleteTmp();
     }
     
     function index(){

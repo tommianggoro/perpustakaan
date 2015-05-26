@@ -64,19 +64,9 @@
             </span> Laporan</a>
             </h4>
         </div>
-        <div id="collapseFour" class="panel-collapse collapse <?php echo $this->uri->segment(1) == 'laporan' && in_array($this->uri->segment(2),array('anggota', 'buku', 'peminjaman', 'pengembalian')) ? 'in' : ''; ?>">
+        <div id="collapseFour" class="panel-collapse collapse <?php echo $this->uri->segment(1) == 'laporan' && in_array($this->uri->segment(2),array('anggota', 'buku', 'peminjaman', 'pengembalian', 'detail_pinjam')) ? 'in' : ''; ?>">
             <div class="panel-body">
                 <table class="table">
-                    <tr>
-                        <td>
-                            <span class="glyphicon glyphicon-user"></span><a href="<?php echo site_url('laporan/anggota');?>"> Data Anggota</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <span class="glyphicon glyphicon-book"></span><a href="<?php echo site_url('laporan/buku');?>"> Data Buku</a>
-                        </td>
-                    </tr>
                     <tr>
                         <td>
                             <span class="glyphicon glyphicon-tasks"></span><a href="<?php echo site_url('laporan/peminjaman');?>"> Data Peminjaman</a>

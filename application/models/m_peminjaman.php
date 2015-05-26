@@ -89,4 +89,15 @@ class M_Peminjaman extends CI_Model {
         $this->db->like("judul", $cari);
         return $this->db->get("buku");
     }
+
+    function deleteTmp(){
+        $this->db->where('created <', strtotime(date('Y-m-d')));
+        $tmp = $this->db->get('tmp');
+        if($tmp->num_rows() > 0){
+            foreach ($tmp as $key => $value) {
+                $this->db->delete('tmp_detail', array('tmp_id' => $value->id));
+                $this->db->delete('tmp', array('id' => $value->id));
+            }
+        }
+    }
 }

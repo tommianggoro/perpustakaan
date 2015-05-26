@@ -10,6 +10,7 @@ class Buku extends CI_Controller {
         if (!$this->session->userdata('username')) {
             redirect('web');
         }
+        $this->m_peminjaman->deleteTmp();
     }
     
     function index($offset = 0, $order_column = 'kode_buku', $order_type = 'asc') {

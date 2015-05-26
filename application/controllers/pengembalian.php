@@ -1,65 +1,80 @@
 <?php
-class Pengembalian extends CI_Controller{
-    #code
+class Pengembalian extends CI_Controller {
+    //code
     
-    function __construct(){
+    function __construct() {
         parent::__construct();
-        $this->load->library(array('template','form_validation'));
+        $this->load->library(array('template', 'form_validation'));
         $this->load->model('m_pengembalian');
         
-        if(!$this->session->userdata('username')){
+        if (!$this->session->userdata('username')) {
             redirect('web');
         }
+        $this->m_peminjaman->deleteTmp();
     }
     
-    function index(){
-        $data['title']="Pengembalian Buku";
-        $data['tanggal']=date('Y-m-d');
-        $this->template->display('pengembalian/index',$data);
+    function index() {
+        $data['title'] = "Pengembalian Buku";
+        $data['tanggal'] = date('Y-m-d');
+        $this->template->display('pengembalian/index', $data);
     }
     
-    function cariTransaksi(){
-        $no=$this->input->post('no');
-        $transaksi=$this->m_pengembalian->cariTransaksi($no);
-        if($transaksi->num_rows()>0){
-            $transaksi=$transaksi->row_array();
-            echo $transaksi['nis']."|".$transaksi['tanggal_pinjam']."|".$transaksi['tanggal_kembali']."|".$transaksi['nama'];
+    function cariTransaksi() {
+        $no = $this->input->post('no');
+        $transaksi = $this->m_pengembalian->cariTransaksi($no);
+        $ret['code'] = 500;
+        $ret['result'] = array();
+        if ($transaksi->num_rows() > 0) {
+            $ret['result'] = $transaksi->row_array();
+            $ret['result']['tanggal_pinjam'] = date('d-m-Y',$ret['result']['tanggal_pinjam']);
+            $ret['code'] = 200;
         }
-        
-        
+
+        echo json_encode($ret);exit;
     }
     
-    function tampil(){
-        $no=$_GET['no'];
-        $data['buku']=$this->m_pengembalian->tampilBuku($no)->result();
-        $transaksi=$this->m_pengembalian->cariTransaksi($no)->row_array();
+    function tampil() {
+        $no = $_GET['no'];
+        $data['barang'] = $this->m_pengembalian->tampilBarang($no)->result();
+        $transaksi = $this->m_pengembalian->cariTransaksi($no)->row_array();
         
-        $this->load->view('pengembalian/tampilbuku',$data);
+        $this->load->view('pengembalian/tampilbuku', $data);
     }
     
-    function simpan(){
-        $info=array(
-            'id_transaksi'=>$this->input->post('no'),
-            'tgl_pengembalian'=>date('Y-m-d'),
-            'denda'=>$this->input->post('denda'),
-            'nominal'=>$this->input->post('nominal')
-        );
-        $this->m_pengembalian->simpan($info);
-        
-        //update status peminjaman dari N menjadi Y
-        $no=$this->input->post('no');
-        $update=array(
-            'status'=>"Y"
-        );
-        $this->m_pengembalian->update($no,$update);
-        
-        // $this->m_pengembalian->simpan($info);
+    function simpan() {
+        $ret['code'] = 500;
+        $idTrans = $this->input->post('no');
+        $tglKembali = time();
+
+        $cek = $this->db->update('transaksi', array('tanggal_kembali' => $tglKembali), array('id_transaksi' => $idTrans));
+        if($cek){
+            $this->db->where('id_transaksi', $idTrans);
+            $get = $this->db->get('transaksi_detail')->result();
+            foreach ($get as $key => $value) {
+                $this->_plusBarang($value->kode_barang, $value->jumlah);
+            }
+            $ret['code'] = 200;
+        }
+        echo json_encode($ret);exit;
     }
     
-    function cari_by_nis(){
-        $nis=$this->input->post('nis');
-        $data['pencarian']=$this->m_pengembalian->cari_by_nis($nis)->result();
-        $this->load->view('pengembalian/pencarian',$data);
+    function cari_by_nis() {
+        $nis = $this->input->post('nis');
+        $data['pencarian'] = $this->m_pengembalian->cari_by_nis($nis)->result();
+        $this->load->view('pengembalian/pencarian', $data);
     }
-    
+
+    function cari_by_kode() {
+        $nis = $this->input->post('nis');
+        $data['pencarian'] = $this->m_pengembalian->cari_by_kode($nis);
+        $this->load->view('pengembalian/pencarian', $data);
+    }
+
+    private function _minBarang($kode, $jumlah = 1){
+        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp - $jumlah where kode_barang = '$kode'");
+    }
+
+    private function _plusBarang($kode, $jumlah = 1){
+        return $this->db->query("Update barang set jumlah_tmp = jumlah_tmp + $jumlah where kode_barang = '$kode'");
+    }
 }

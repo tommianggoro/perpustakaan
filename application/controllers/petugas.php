@@ -9,6 +9,7 @@ class Petugas extends CI_Controller{
         if(!$this->session->userdata('username')){
             redirect('web');
         }
+        $this->m_peminjaman->deleteTmp();
     }
     
     function index(){
