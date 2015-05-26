@@ -1,12 +1,11 @@
 <?php
-class M_barang extends CI_Model {
-    private $table = "barang";
-    private $primary = "kode_barang";
+class M_jenis extends CI_Model {
+    private $table = "type";
+    private $primary = "id";
     
     function semua($limit = 10, $offset = 0, $order_column = '', $order_type = 'asc') {
         if (empty($order_column) || empty($order_type)) $this->db->order_by($this->primary, 'asc');
         else $this->db->order_by($order_column, $order_type);
-        $this->db->join("type","type.id = barang.type");
         return $this->db->get($this->table, $limit, $offset);
     }
     
@@ -37,7 +36,14 @@ class M_barang extends CI_Model {
     }
     
     function cari($cari) {
-        $this->db->like($this->primary, $cari);
+        $this->db->like("nama", $cari);
         return $this->db->get($this->table);
+    }
+
+    function getAll(){
+        $q = $this->db->get($this->table);
+        if($q->num_rows() > 0)
+            return $q->result();
+        return false;
     }
 }

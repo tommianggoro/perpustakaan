@@ -1,52 +1,54 @@
 <script>
     $(function(){
-        
         function loadData(args) {
-            //code
             $("#tampil").load("<?php echo site_url('peminjaman/tampil');?>");
         }
         loadData();
-        
         function kosong(args) {
             //code
             $("#kode").val('');
-            $("#judul").val('');
-            $("#pengarang").val('');
+            $("#jenis").val('');
+            $("#type").val('');
+            $("#merk").val('');
         }
         
-        $("#nis").click(function(){
-            var nis=$("#nis").val();
-            
+        $("#kodeCabang").change(function(){
+            $('#nama').val('');
+            $('#nama').val($(this).find('option:selected').attr('name'));
+            /**
+            var nis = $("#nis").val();
             $.ajax({
-                url:"<?php echo site_url('peminjaman/cariAnggota');?>",
+                url:"<?php echo site_url('peminjaman/cariCabang');?>",
                 type:"POST",
                 data:"nis="+nis,
                 cache:false,
                 success:function(html){
                     $("#nama").val(html);
                 }
-            })
+            });
+            **/
         })
         
-        $("#kode").keypress(function(){
+        $("#kodeCabang").keypress(function(){
             var keycode = (event.keyCode ? event.keyCode : event.which);
-            
             if(keycode == '13'){
-                var kode=$("#kode").val();
+                var kode = $("#kodeCabang").val();
                 $.ajax({
-                    url:"<?php echo site_url('peminjaman/cariBuku');?>",
+                    url:"<?php echo site_url('peminjaman/cariBarang');?>",
                     type:"POST",
                     data:"kode="+kode,
+                    dataType:'JSON',
                     cache:false,
                     success:function(msg){
-                        data=msg.split("|");
-                        if (data==0) {
-                            alert("data tidak ditemukan");
-                            $("#judul").val('');
-                            $("#pengarang").val('');
+                        if(msg.code == 500){
+                            alert("Data Tidak Ditemukan");
+                            $("#jenis").val('');
+                            $("#merk").val('');
+                            $("#type").val('');
                         }else{
-                            $("#judul").val(data[0]);
-                            $("#pengarang").val(data[1]);
+                            $("#jenis").val(msg.result.jenis);
+                            $("#merk").val(msg.result.merk);
+                            $("#type").val(msg.result.type);
                             $("#tambah").focus();
                         }
                     }
@@ -54,87 +56,93 @@
             }
         });
 
-        $("#kode").bind('keyup', function(){
+        $("#kodeCabang").bind('keyup', function(){
             var kode = $(this).val();
             $.ajax({
-                url:"<?php echo site_url('peminjaman/cariBuku');?>",
+                url:"<?php echo site_url('peminjaman/cariBarang');?>",
                 type:"POST",
                 data:"kode="+kode,
+                dataType:'JSON',
                 cache:false,
                 success:function(msg){
-                    data=msg.split("|");
-                    if (data==0) {
-                        $("#judul").val('');
-                        $("#pengarang").val('');
+                    if(msg.code == 200){
+                        $("#jenis").val(msg.result.jenis);
+                        $("#merk").val(msg.result.merk);
+                        $("#type").val(msg.result.type);
                     }else{
-                        $("#judul").val(data[0]);
-                        $("#pengarang").val(data[1]);
-                        $("#tambah").focus();
+                        $("#jenis").val('');
+                        $("#merk").val('');
+                        $("#type").val('');
                     }
                 }
             });
         });
         
         $("#tambah").click(function(){
-            var kode=$("#kode").val();
-            var judul=$("#judul").val();
-            var pengarang=$("#pengarang").val();
+            var kode = $("#kode").val();
+            var jenis = $("#jenis").val();
+            var type = $("#type").val();
+            var merk = $("#merk").val();
             
-            if (kode=="") {
-                //code
-                alert("Kode Buku Masih Kosong");
+            if (kode == "") {
+                alert("Kode Barang Masih Kosong");
                 return false;
-            }else if (judul=="") {
-                //code
+            }else if (jenis == "") {
                 alert("Data tidak ditemukan");
-                return false
+                return false;
             }else{
                 $.ajax({
                     url:"<?php echo site_url('peminjaman/tambah');?>",
                     type:"POST",
-                    data:"kode="+kode+"&judul="+judul+"&pengarang="+pengarang,
+                    data:{kode : kode, jenis : jenis, type : type, merk : merk},
                     cache:false,
-                    success:function(html){
-                        loadData();
-                        kosong();
+                    success:function(res){
+                        if(res.code == 200){
+                            loadData();
+                            kosong();
+                        }else if(res.code == 502){
+                            alert("Stock Barang Habis");
+                        }else{
+                            alert("Oops.. Something's Wrong.");
+                        }
                     }
                 })    
             }
             
-        })
+        });
         
         
         $("#simpan").click(function(){
-            var nomer=$("#no").val();
-            var pinjam=$("#pinjam").val();
-            var kembali=$("#kembali").val();
-            var nis=$("#nis").val();
-            var jumlah=parseInt($("#jumlahTmp").val(),10);
-            
-            if (nis=="") {
-                alert("Pilih Nis Siswa");
+            var nomer = $("#no").val();
+            var pinjam = $("#pinjam").val();
+            var kode = $("#kodeCabang").val();
+            var jumlah = parseInt($("#jumlahTmp").val(),10);
+            var idTemp = $("#idTemp").val();
+            if(kode == ""){
+                alert("Pilih Cabang");
                 return false;
-            }else if (jumlah==0) {
-                alert("pilih buku yang akan dipinjam");
+            }else if (jumlah <= 0) {
+                alert("Tentukan jumlah barang.");
                 return false;
             }else{
                 $.ajax({
                     url:"<?php echo site_url('peminjaman/sukses');?>",
                     type:"POST",
-                    data:"nomer="+nomer+"&pinjam="+pinjam+"&kembali="+kembali+"&nis="+nis+"&jumlah="+jumlah,
+                    data: {nomer : nomer, pinjam : pinjam, idCabang : kode, jumlah : jumlah, idTemp : idTemp},
                     cache:false,
-                    success:function(html){
-                        alert("Transaksi Peminjaman berhasil");
+                    success:function(resp){
+                        console.log(resp);
+                        /**alert("Transaksi Peminjaman berhasil");
                         location.reload();
+                        **/
                     }
                 })
             }
             
-        })
+        });
         
         $(".hapus").live("click",function(){
-            var kode=$(this).attr("kode");
-            
+            var kode = $(this).attr("kode");
             $.ajax({
                 url:"<?php echo site_url('peminjaman/hapus');?>",
                 type:"POST",
@@ -144,6 +152,7 @@
                     loadData();
                 }
             });
+            return false;
         });
         
         $("#cari").click(function(){
@@ -164,19 +173,21 @@
             })
         })
         
+        /**
         $(".tambah").live("click",function(){
             var kode=$(this).attr("kode");
-            var judul=$(this).attr("judul");
+            var jenis=$(this).attr("jenis");
             var pengarang=$(this).attr("pengarang");
             
             $("#kode").val(kode);
-            $("#judul").val(judul);
+            $("#jenis").val(jenis);
             $("#pengarang").val(pengarang);
             
             $("#myModal2").modal("hide");
-        })
+        });
+        **/
         
-    })
+    });
 </script>
 
 <legend><?php echo $title;?></legend>
@@ -198,30 +209,32 @@
                     </div>
                 </div>
                 
+                <!--
                 <div class="form-group">
                     <label class="col-lg-4 control-label">Tgl Kembali</label>
                     <div class="col-lg-7">
                         <input type="text" id="kembali" name="kembali" class="form-control" value="<?php echo $tanggalkembali;?>" readonly="readonly">
                     </div>
                 </div>
+                -->
             </div>
             <div class="col-md-6">
                 <div class="form-group">
-                    <label class="col-lg-4 control-label">Nis</label>
+                    <label class="col-lg-4 control-label">Kode Cabang</label>
                     <div class="col-lg-7">
-                        <select name="nis" class="form-control" id="nis">
+                        <select name="kode" class="form-control" id="kodeCabang">
                             <option></option>
                             <?php foreach($anggota as $anggota):?>
-                            <option value="<?php echo $anggota->nis;?>"><?php echo $anggota->nis;?></option>
+                                <option value="<?php echo $anggota->kode;?>" name="<?php echo $anggota->nama; ?>"><?php echo $anggota->kode;?></option>
                             <?php endforeach;?>
                         </select>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label class="col-lg-4 control-label">Nama Siswa</label>
+                    <label class="col-lg-4 control-label">Nama Cabang</label>
                     <div class="col-lg-7">
-                        <input type="text" name="nama" id="nama" class="form-control">
+                        <input type="text" name="nama" id="nama" class="form-control" readonly="readOnly">
                     </div>
                 </div>
             </div>
@@ -231,31 +244,29 @@
 
 <div class="panel panel-success">
     <div class="panel-heading">
-        Data Buku
+        Data Barang
     </div>
     
     <div class="panel-body">
         <div class="form-inline">
             <div class="form-group">
-                <label>Kode Buku</label>
-                <input type="text" class="form-control" placeholder="Kode Buku" id="kode">
+                <label>Kode Barang</label>
+                <input type="text" class="form-control" placeholder="Kode Barang" id="kode">
             </div>
             <div class="form-group">
-                <label class="sr-only">Judul Buku</label>
-                <input type="text" class="form-control" placeholder="Judul Buku" id="judul" readonly="readonly">
+                <label class="sr-only">Nama Barang</label>
+                <input type="text" class="form-control" placeholder="Jenis Barang" id="jenis" readonly="readonly">
+                <input type="hidden" class="form-control" placeholder="Merk Barang" id="merk" readonly="readonly">
+                <input type="hidden" class="form-control" placeholder="Type Barang" id="type" readonly="readonly">
             </div>
             <div class="form-group">
-                <label class="sr-only">Pengarang</label>
-                <input type="text" class="form-control" placeholder="Pengarang" id="pengarang" readonly="readonly">
-            </div>
-            <div class="form-group">
-                <label class="sr-only">Pengarang</label>
                 <button id="tambah" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i></button>
             </div>
+            <!--
             <div class="form-group">
-                <label class="sr-only">Pengarang</label>
                 <button id="cari" class="btn btn-default"><i class="glyphicon glyphicon-search"></i></button>
             </div>
+            -->
         </div>
     </div>
     
@@ -270,27 +281,27 @@
 
 
  <!-- Modal -->
-            <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Cari Buku</h4>
-                  </div>
-                  <div class="modal-body">
-                        <div class="form-horizontal">
-                            <label class="col-lg-3 control-label">Cari Nama Buku</label>
-                            <div class="col-lg-5">
-                                <input type="text" name="caribuku" id="caribuku" class="form-control">
-                            </div>
-                        </div>
-                        
-                        <div id="tampilbuku"></div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="konfirmasi">Hapus</button>
-                  </div>
-                </div><!-- /.modal-content -->
-              </div><!-- /.modal-dialog -->
-            </div><!-- /.modal -->
+<div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Cari Barang</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-horizontal">
+            <label class="col-lg-5 control-label">Cari Nama Barang</label>
+            <div class="col-lg-5">
+                <input type="text" name="caribuku" id="caribuku" class="form-control">
+            </div>
+        </div>
+        
+        <div id="tampilbuku"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="konfirmasi">Hapus</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

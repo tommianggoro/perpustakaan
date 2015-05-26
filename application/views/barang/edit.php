@@ -11,7 +11,20 @@
     <div class="form-group">
         <label class="col-lg-2 control-label">Type Barang</label>
         <div class="col-lg-5">
-            <input type="text" name="type" class="form-control" value="<?php echo $barang['type'];?>">
+            <select name="type" required class="form-control" >
+                <option value="">--PILIH--</option>
+                <?php if($jenis): ?>
+                    <?php foreach ($jenis as $key => $value) : ?>
+                    <?php 
+                    $sel = "";
+                    if($barang["type"] == $value->id):
+                        $sel = "selected='selected'";
+                    endif;
+                    ?>
+                    <option value="<?php echo $value->id; ?>" <?php echo $sel; ?> ><?php echo $value->nama; ?></option>
+                <?php endforeach; ?>
+            <?php endif; ?>
+            </select>
         </div>
     </div>
     
@@ -26,6 +39,13 @@
         <label class="col-lg-2 control-label">Jenis Barang</label>
         <div class="col-lg-5">
             <input type="text" name="jenis" class="form-control" value="<?php echo $barang['jenis'];?>">
+        </div>
+    </div>
+
+     <div class="form-group">
+        <label class="col-lg-2 control-label">Jumlah Barang</label>
+        <div class="col-lg-5">
+            <input type="number" name="jumlah" class="form-control" value="<?php echo $barang['jumlah'];?>">
         </div>
     </div>
         

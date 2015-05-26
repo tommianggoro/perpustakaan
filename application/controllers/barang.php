@@ -5,7 +5,7 @@ class Barang extends CI_Controller {
     function __construct() {
         parent::__construct();
         $this->load->library(array('template', 'form_validation', 'pagination', 'upload'));
-        $this->load->model('m_barang');
+        $this->load->model(array('m_barang','m_jenis'));
         
         if (!$this->session->userdata('username')) {
             redirect('web');
@@ -21,7 +21,7 @@ class Barang extends CI_Controller {
         $data['barang'] = $this->m_barang->semua($this->limit, $offset, $order_column, $order_type)->result();
         $data['title'] = "Data Barang";
         
-        $config['base_url'] = site_url('anggota/index/');
+        $config['base_url'] = site_url('barang/index/');
         $config['total_rows'] = $this->m_barang->jumlah();
         $config['per_page'] = $this->limit;
         $config['uri_segment'] = 3;
@@ -36,6 +36,7 @@ class Barang extends CI_Controller {
     
     function tambah() {
         $data['title'] = "Tambah Barang";
+        $data['jenis'] = $this->m_jenis->getAll();
         $this->_set_rules();
         if ($this->form_validation->run() == true) {
              //jika validasi dijalankan dan benar
@@ -54,6 +55,8 @@ class Barang extends CI_Controller {
                     'type' => $this->input->post('type'), 
                     'merk' => $this->input->post('merk'), 
                     'jenis' => $this->input->post('jenis'),
+                    'jumlah' => $this->input->post('jumlah'),
+                    'jumlah_tmp' => $this->input->post('jumlah'),
                     'dibuat' => time()
                 );
                 $this->m_barang->simpan($info);
@@ -68,17 +71,28 @@ class Barang extends CI_Controller {
     
     function edit($id) {
         $data['title'] = "Edit data Barang";
+        $data['barang'] = $this->m_barang->cek($id)->row_array();
+        $data['jenis'] = $this->m_jenis->getAll();
         $this->_set_rules();
         if ($this->form_validation->run() == true) {
             $kode = $this->input->post('kode');
-            
+            $oldJumlah = $data['barang']['jumlah'];
+            $tmpJumlah = $data['barang']['jumlah_tmp'];
+            if($oldJumlah < $this->input->post('jumlah')){
+                $temp = $this->input->post('jumlah') - $oldJumlah;
+                $tmpJumlah = $tmpJumlah + $temp;
+            }elseif($oldJumlah > $this->input->post('jumlah')){
+                $temp = $oldJumlah - $this->input->post('jumlah');
+                $tmpJumlah = $tmpJumlah - $temp;
+            }
             $info = array(
-                    'kode_barang' => $this->input->post('kode'), 
-                    'type' => $this->input->post('type'), 
-                    'merk' => $this->input->post('merk'), 
-                    'jenis' => $this->input->post('jenis'),
-                    'dibuat' => time()
-                );
+                'kode_barang' => $this->input->post('kode'), 
+                'type' => $this->input->post('type'), 
+                'merk' => $this->input->post('merk'), 
+                'jenis' => $this->input->post('jenis'),
+                'jumlah' => $this->input->post('jumlah'),
+                'jumlah_tmp' => $tmpJumlah
+            );
             $this->m_barang->update($kode, $info);
             
             $data['barang'] = $this->m_barang->cek($id)->row_array();
@@ -87,7 +101,6 @@ class Barang extends CI_Controller {
         } 
         else {
             $data['message'] = "";
-            $data['barang'] = $this->m_barang->cek($id)->row_array();
             $this->template->display('barang/edit', $data);
         }
     }

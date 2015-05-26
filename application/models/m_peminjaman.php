@@ -4,6 +4,7 @@ class M_Peminjaman extends CI_Model {
     
     function nootomatis() {
         $today = date('Ymd');
+        
         // $query = mysql_query("select max(id_transaksi) as last from transaksi where id_transaksi like '$today%'");
         // $data = mysql_fetch_array($query);
         $query = $this->db->query("select max(id_transaksi) as last from transaksi where id_transaksi like '$today%'");
@@ -28,22 +29,41 @@ class M_Peminjaman extends CI_Model {
         $this->db->where("nis", $nis);
         return $this->db->get("anggota");
     }
+
+    function cariCabang($nis) {
+        $this->db->where("kode", $nis);
+        return $this->db->get("cabang");
+    }
+
+    function getCabang() {
+        return $this->db->get("cabang");
+    }
     
     function cariBuku($kode) {
         $this->db->where("kode_buku", $kode);
         return $this->db->get("buku");
+    }
+
+    function cariBarang($kode) {
+        $this->db->where("kode_barang", $kode);
+        $this->db->join("type","type.id = barang.type");
+        return $this->db->get("barang");
     }
     
     function simpanTmp($info) {
         $this->db->insert("tmp", $info);
     }
     
-    function tampilTmp() {
-        return $this->db->get("tmp");
+    function tampilTmp($id) {
+        $this->db->select('type.nama, tmp_detail.*');
+        $this->db->where('tmp_id', $id);
+        $this->db->join("type","type.id = tmp_detail.type");
+        return $this->db->get("tmp_detail");
     }
     
-    function cekTmp($kode) {
-        $this->db->where("kode_buku", $kode);
+    function cekTmp($id, $date) {
+        $this->db->where("id_user", $id);
+        $this->db->where("created", $date);
         return $this->db->get("tmp");
     }
     
@@ -52,7 +72,7 @@ class M_Peminjaman extends CI_Model {
     }
     
     function hapusTmp($kode) {
-        $this->db->where("kode_buku", $kode);
+        $this->db->where("kode_barang", $kode);
         $this->db->delete("tmp");
     }
     
@@ -61,6 +81,11 @@ class M_Peminjaman extends CI_Model {
     }
     
     function pencarianbuku($cari) {
+        $this->db->like("judul", $cari);
+        return $this->db->get("buku");
+    }
+
+    function pencarianbarang($cari) {
         $this->db->like("judul", $cari);
         return $this->db->get("buku");
     }

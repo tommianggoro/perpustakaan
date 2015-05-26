@@ -18,6 +18,7 @@
             <td>Jenis</td>
             <td>Merk</td>
             <td>Type</td>
+            <td>Jumlah</td>
             <td>Dibuat</td>
             <td colspan="2"></td>
         </tr>
@@ -28,7 +29,8 @@
         <td><?php echo $row->kode_barang;?></td>
         <td><?php echo $row->jenis;?></td>
         <td><?php echo $row->merk;?></td>
-        <td><?php echo $row->type;?></td>
+        <td><?php echo $row->nama;?></td>
+        <td><?php echo $row->jumlah;?></td>
         <td><?php echo date('d-m-Y', $row->dibuat);?></td>
         <td><a href="<?php echo site_url('barang/edit/'.$row->kode_barang);?>"><i class="glyphicon glyphicon-edit"></i></a></td>
         <td><a href="#" class="hapus" kode="<?php echo $row->kode_barang;?>"><i class="glyphicon glyphicon-trash"></i></a></td>

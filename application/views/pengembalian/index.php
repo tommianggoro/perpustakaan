@@ -2,10 +2,8 @@
     $(function(){
         $("#no").keypress(function(){
             var keycode = (event.keyCode ? event.keyCode : event.which);
-            
             if(keycode == '13'){
-                var no=$("#no").val();
-                
+                var no = $(this).val();
                 $.ajax({
                     url:"<?php echo site_url('pengembalian/cariTransaksi');?>",
                     type:"POST",
@@ -27,25 +25,48 @@
                             $("#tampil").load("<?php echo site_url('pengembalian/tampil');?>","no="+no);    
                         }
                     }
-                })
+                });
             }
-        })
+        });
+
+        $('#no').change(function(){
+            $.ajax({
+                url:"<?php echo site_url('pengembalian/cariTransaksi');?>",
+                type:"POST",
+                data:"no="+$(this).val(),
+                cache:false,
+                success:function(msg){
+                    if (msg=="") {
+                        alert("data tidak ditemukan");
+                    }else{
+                        data=msg.split("|");
+                        $("#nis").val(data[0]);
+                        $("#pinjam").val(data[1]);
+                        $("#kembali").val(data[2]);
+                        $("#nama").val(data[3]);
+                        
+                        $("#denda").attr("disabled",false);
+                        $("#denda").focus();
+                        
+                        $("#tampil").load("<?php echo site_url('pengembalian/tampil');?>","no="+no);    
+                    }
+                }
+            });
+        });
         
-        
+        /**
         $("#nominal").attr("disabled",true);
         $("#denda").attr("disabled",true);
         $("#denda").click(function(){
             var denda=$("#denda").val();
-            
             if (denda=="Y") {
-                //code
                 $("#nominal").attr("disabled",false);
                 $("#nominal").focus();
             }else{
                 $("#nominal").attr("disabled",true);
             }
-        })
-        
+        });
+        **/
         $("#simpan").click(function(){
             var no=$("#no").val();
             var nis=$("#nis").val();
@@ -143,13 +164,14 @@
                         <input type="text" name="pinjam" id="pinjam" class="form-control" readonly="readonly">
                     </div>
                 </div>
-                
+                <!--
                 <div class="form-group">
                     <label class="col-lg-4 control-label">Tgl. Kembali</label>
                     <div class="col-lg-7">
                         <input type="text" name="kembali" id="kembali" class="form-control" readonly="readonly">
                     </div>
                 </div>
+                -->
             </div>
             
             <div class="col-md-6">

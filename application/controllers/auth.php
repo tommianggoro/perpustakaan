@@ -27,9 +27,10 @@ class Auth extends CI_Controller {
 			$password = $this->input->post('password');
 			$cek = $this->m_petugas->cek($username, md5($password));
 			if ($cek->num_rows() > 0) {
-				
+				$res = $cek->row();
 				//login berhasil, buat session
 				$this->session->set_userdata('username', $username);
+				$this->session->set_userdata('id', $res->id_petugas);
 				redirect('dashboard');
 			} 
 			else {
@@ -43,6 +44,6 @@ class Auth extends CI_Controller {
 	
 	function logout() {
 		$this->session->unset_userdata('username');
-		redirect('auth');
+		redirect('/');
 	}
 }
